@@ -91,3 +91,5 @@ class Usage:
     completion_tokens: int
     total_tokens: int
 ```
+
+To learn more about this SDK, please refer to the [dedicated documentation](https://www.edgee.cloud/docs/sdk/python).
