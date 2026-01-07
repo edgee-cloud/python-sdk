@@ -71,6 +71,34 @@ if response.choices[0].message.get("tool_calls"):
     print(response.choices[0].message["tool_calls"])
 ```
 
+### Streaming
+
+```python
+for chunk in edgee.stream(
+    model="gpt-4o",
+    input="Tell me a story",
+):
+    if chunk.choices[0].delta.content:
+        print(chunk.choices[0].delta.content, end="", flush=True)
+```
+
+### Streaming with Messages
+
+```python
+for chunk in edgee.stream(
+    model="gpt-4o",
+    input={
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Hello!"},
+        ],
+    },
+):
+    delta = chunk.choices[0].delta
+    if delta.content:
+        print(delta.content, end="", flush=True)
+```
+
 ## Response
 
 ```python
@@ -90,6 +118,26 @@ class Usage:
     prompt_tokens: int
     completion_tokens: int
     total_tokens: int
+```
+
+### Streaming Response
+
+```python
+@dataclass
+class StreamChunk:
+    choices: list[StreamChoice]
+
+@dataclass
+class StreamChoice:
+    index: int
+    delta: StreamDelta
+    finish_reason: str | None
+
+@dataclass
+class StreamDelta:
+    role: str | None  # Only present in first chunk
+    content: str | None
+    tool_calls: list[dict] | None
 ```
 
 To learn more about this SDK, please refer to the [dedicated documentation](https://www.edgee.cloud/docs/sdk/python).

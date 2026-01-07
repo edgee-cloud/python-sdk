@@ -68,6 +68,25 @@ class SendResponse:
 
 
 @dataclass
+class StreamDelta:
+    role: str | None = None
+    content: str | None = None
+    tool_calls: list[dict] | None = None
+
+
+@dataclass
+class StreamChoice:
+    index: int
+    delta: StreamDelta
+    finish_reason: str | None = None
+
+
+@dataclass
+class StreamChunk:
+    choices: list[StreamChoice]
+
+
+@dataclass
 class EdgeeConfig:
     api_key: str | None = None
     base_url: str | None = None
@@ -159,3 +178,87 @@ class Edgee:
             )
 
         return SendResponse(choices=choices, usage=usage)
+
+    def stream(
+        self,
+        model: str,
+        input: str | InputObject | dict,
+    ):
+        """Stream a completion request from the Edgee AI Gateway.
+
+        Yields StreamChunk objects as they arrive from the API.
+        """
+
+        if isinstance(input, str):
+            messages = [{"role": "user", "content": input}]
+            tools = None
+            tool_choice = None
+        elif isinstance(input, InputObject):
+            messages = input.messages
+            tools = input.tools
+            tool_choice = input.tool_choice
+        else:
+            messages = input.get("messages", [])
+            tools = input.get("tools")
+            tool_choice = input.get("tool_choice")
+
+        body: dict = {"model": model, "messages": messages, "stream": True}
+        if tools:
+            body["tools"] = tools
+        if tool_choice:
+            body["tool_choice"] = tool_choice
+
+        request = Request(
+            f"{self.base_url}{API_ENDPOINT}",
+            data=json.dumps(body).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}",
+            },
+            method="POST",
+        )
+
+        try:
+            with urlopen(request) as response:
+                # Read and parse SSE stream
+                buffer = ""
+                for line in response:
+                    decoded_line = line.decode("utf-8")
+
+                    if decoded_line.strip() == "":
+                        continue
+
+                    if decoded_line.startswith("data: "):
+                        data_str = decoded_line[6:].strip()
+
+                        # Check for stream end signal
+                        if data_str == "[DONE]":
+                            break
+
+                        try:
+                            data = json.loads(data_str)
+
+                            # Parse choices
+                            choices = []
+                            for c in data.get("choices", []):
+                                delta_data = c.get("delta", {})
+                                delta = StreamDelta(
+                                    role=delta_data.get("role"),
+                                    content=delta_data.get("content"),
+                                    tool_calls=delta_data.get("tool_calls"),
+                                )
+                                choice = StreamChoice(
+                                    index=c["index"],
+                                    delta=delta,
+                                    finish_reason=c.get("finish_reason"),
+                                )
+                                choices.append(choice)
+
+                            yield StreamChunk(choices=choices)
+                        except json.JSONDecodeError:
+                            # Skip malformed JSON
+                            continue
+
+        except HTTPError as e:
+            error_body = e.read().decode("utf-8")
+            raise RuntimeError(f"API error {e.code}: {error_body}") from e
