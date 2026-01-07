@@ -66,6 +66,34 @@ class SendResponse:
     choices: list[Choice]
     usage: Usage | None = None
 
+    @property
+    def text(self) -> str | None:
+        """Convenience property to get text content from the first choice."""
+        if self.choices and self.choices[0].message.get("content"):
+            return self.choices[0].message["content"]
+        return None
+
+    @property
+    def message(self) -> dict | None:
+        """Convenience property to get the message from the first choice."""
+        if self.choices:
+            return self.choices[0].message
+        return None
+
+    @property
+    def finish_reason(self) -> str | None:
+        """Convenience property to get finish_reason from the first choice."""
+        if self.choices and self.choices[0].finish_reason:
+            return self.choices[0].finish_reason
+        return None
+
+    @property
+    def tool_calls(self) -> list | None:
+        """Convenience property to get tool_calls from the first choice."""
+        if self.choices and self.choices[0].message.get("tool_calls"):
+            return self.choices[0].message["tool_calls"]
+        return None
+
 
 @dataclass
 class StreamDelta:
@@ -84,6 +112,27 @@ class StreamChoice:
 @dataclass
 class StreamChunk:
     choices: list[StreamChoice]
+
+    @property
+    def text(self) -> str | None:
+        """Convenience property to get text content from the first choice."""
+        if self.choices and self.choices[0].delta.content:
+            return self.choices[0].delta.content
+        return None
+
+    @property
+    def role(self) -> str | None:
+        """Convenience property to get role from the first choice."""
+        if self.choices and self.choices[0].delta.role:
+            return self.choices[0].delta.role
+        return None
+
+    @property
+    def finish_reason(self) -> str | None:
+        """Convenience property to get finish_reason from the first choice."""
+        if self.choices and self.choices[0].finish_reason:
+            return self.choices[0].finish_reason
+        return None
 
 
 @dataclass
@@ -256,3 +305,20 @@ class Edgee:
         Yields StreamChunk objects as they arrive from the API.
         """
         return self.send(model=model, input=input, stream=True)
+
+    def stream_text(
+        self,
+        model: str,
+        input: str | InputObject | dict,
+    ):
+        """Stream only the text content from the completion.
+
+        Convenience method that yields only non-empty text strings,
+        filtering out chunks without content.
+
+        Yields:
+            str: Text content from each chunk
+        """
+        for chunk in self.stream(model=model, input=input):
+            if chunk.text:
+                yield chunk.text
