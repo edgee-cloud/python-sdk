@@ -6,10 +6,25 @@ on:
       - "v*"
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --all-extras
+      - run: uv run ruff format --check .
+      - run: uv run ruff check .
+      - run: uv run pytest
+
   release:
+    needs: test
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # Required for trusted publishing
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -27,4 +42,3 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-
