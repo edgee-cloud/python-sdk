@@ -1,21 +1,18 @@
-"""Example usage of Edgee Gateway SDK"""
+"""Example usage of Edgee Gateway SDK
 
-import os
-import sys
-
-# Add parent directory to path for local testing
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+Install the package from PyPI:
+    pip install edgee
+"""
 
 from pydantic import BaseModel
 
-from edgee import Edgee, Tool, create_tool
+from edgee import Edgee, EdgeeConfig, Tool, create_tool
 
-edgee = Edgee(os.environ.get("EDGEE_API_KEY", "test-key"))
-
+edgee = Edgee(api_key="YOUR_API_KEY")
 # Test 1: Simple string input
 print("Test 1: Simple string input")
 response1 = edgee.send(
-    model="mistral/mistral-small-latest",
+    model="devstral2",
     input="What is the capital of France?",
 )
 print(f"Content: {response1.text}")
@@ -25,7 +22,7 @@ print()
 # Test 2: Full input object with messages
 print("Test 2: Full input object with messages")
 response2 = edgee.send(
-    model="mistral/mistral-small-latest",
+    model="devstral2",
     input={
         "messages": [
             {"role": "system", "content": "You are a helpful assistant."},
@@ -39,7 +36,7 @@ print()
 # Test 3: With tools
 print("Test 3: With tools")
 response3 = edgee.send(
-    model="gpt-4o",
+    model="devstral2",
     input={
         "messages": [{"role": "user", "content": "What is the weather in Paris?"}],
         "tools": [
@@ -67,7 +64,7 @@ print()
 
 # Test 4: Streaming
 print("Test 4: Streaming")
-for chunk in edgee.stream(model="mistral/mistral-small-latest", input="What is Python?"):
+for chunk in edgee.stream(model="devstral2", input="What is Python?"):
     if chunk.text:
         print(chunk.text, end="", flush=True)
 print("\n")
@@ -119,7 +116,7 @@ weather_tool = Tool(
 
 # Send request with automatic tool execution
 response5 = edgee.send(
-    model="gpt-4o",
+    model="devtral2",
     input="What's the weather like in Paris?",
     tools=[weather_tool],
 )
@@ -161,7 +158,7 @@ calculator_tool = Tool(
 )
 
 response6 = edgee.send(
-    model="gpt-4o",
+    model="devtral2",
     input="What's 25 multiplied by 4, and then what's the weather in London?",
     tools=[weather_tool, calculator_tool],
 )
