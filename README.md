@@ -14,6 +14,7 @@ pip install edgee
 ## Quick Start
 
 ```python
+import os
 from edgee import Edgee
 
 edgee = Edgee("your-api-key")
@@ -52,7 +53,7 @@ The `stream()` method enables real-time streaming responses:
 for chunk in edgee.stream("gpt-4o", "Tell me a story"):
     if chunk.text:
         print(chunk.text, end="", flush=True)
-    
+
     if chunk.finish_reason:
         print(f"\nFinished: {chunk.finish_reason}")
 ```

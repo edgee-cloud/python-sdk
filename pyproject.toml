@@ -5,7 +5,7 @@ description = "Lightweight Python SDK for Edgee AI Gateway"
 readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["pydantic>=2.0.0"]
 authors = [
     { name = "Edgee", email = "support@edgee.cloud" }
 ]
@@ -26,7 +26,7 @@ Homepage = "https://github.com/edgee-cloud/python-sdk"
 Repository = "https://github.com/edgee-cloud/python-sdk"
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0.0", "ruff>=0.8.0"]
+dev = ["pytest>=8.0.0", "ruff>=0.8.0", "python-dotenv>=1.0.0"]
 
 [build-system]
 requires = ["hatchling"]
@@ -61,4 +61,5 @@ indent-style = "space"
 dev = [
     "pytest>=8.0.0",
     "ruff>=0.8.0",
+    "python-dotenv>=1.0.0",
 ]
