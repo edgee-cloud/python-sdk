@@ -5,7 +5,7 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from edgee import Edgee, EdgeeConfig, Tool, create_tool
 
@@ -382,7 +382,7 @@ class TestToolClass:
             handler=lambda p: p.value,
         )
 
-        with pytest.raises(Exception):  # ValidationError
+        with pytest.raises(ValidationError):
             tool.execute({"value": "not_an_int"})
 
     def test_create_tool_helper(self):
