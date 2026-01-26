@@ -45,6 +45,7 @@ class InputObject:
     messages: list[dict]
     tools: list[dict] | None = None
     tool_choice: str | dict | None = None
+    tags: list[str] | None = None
 
 
 @dataclass
@@ -188,14 +189,17 @@ class Edgee:
             messages = [{"role": "user", "content": input}]
             tools = None
             tool_choice = None
+            tags = None
         elif isinstance(input, InputObject):
             messages = input.messages
             tools = input.tools
             tool_choice = input.tool_choice
+            tags = input.tags
         else:
             messages = input.get("messages", [])
             tools = input.get("tools")
             tool_choice = input.get("tool_choice")
+            tags = input.get("tags")
 
         body: dict = {"model": model, "messages": messages}
         if stream:
@@ -204,6 +208,8 @@ class Edgee:
             body["tools"] = tools
         if tool_choice:
             body["tool_choice"] = tool_choice
+        if tags:
+            body["tags"] = tags
 
         request = Request(
             f"{self.base_url}{API_ENDPOINT}",
